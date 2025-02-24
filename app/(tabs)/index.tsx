@@ -87,15 +87,6 @@ export default function TabOneScreen() {
       }
     }, [page,search,cat])
 
-    // let user = localStorage.getItem("publicData");
-
-    if (Platform.OS === 'ios') {
-      var user =  AsyncStorage.getItem('publicData')._j;
-    }else {
-      var user = localStorage.getItem("publicData");
-    }
-
-    // let user =  null;
 
 
     // useEffect(() => {
@@ -127,9 +118,22 @@ export default function TabOneScreen() {
 
     const [invoice, setInvoice] = React.useState(undefined);
 
-      AsyncStorage.getItem('invoiceId').then((item) => setInvoice(invoice))
 
-    console.log('s',invoice);
+    const [user, setUser] = React.useState(undefined);
+
+    useEffect(() => {
+      if (user == undefined) {
+        AsyncStorage.multiGet(['publicData', 'invoiceId']).then((data) => {
+          if (JSON.parse(data[0][1])) {
+            setInvoice(JSON.parse(data[1][1]))
+            setUser(JSON.parse(data[0][1]))
+          }else {
+            setUser(null)
+          }
+        });
+      }
+    });
+
 
 
     const [isEnabled, setIsEnabled] = React.useState(false);
@@ -381,21 +385,11 @@ export default function TabOneScreen() {
               quantity:cart.map((x)=> x.quantity ),
               for:'order',trigger:'new' ,name:name,phone:number,mail:mail,store:store,location:location,
             })
-            .then(res=> {
+            .then(async(res)=> {
               const data = JSON.stringify(res.data.public);
               const invoiceId = JSON.stringify(res.data.id);
-              // ['publicData',data]
 
-              try {
-                 AsyncStorage.setItem(
-                  'invoiceId',
-                  invoiceId,
-                );
-              } catch (error) {
-                // Error saving data
-                console.log('error',error);
-
-              }
+              await AsyncStorage.multiSet([['invoiceId', invoiceId], ['publicData', data]])
 
               setCart([])
               setCartProceed(!cartProceed)
