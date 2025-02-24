@@ -22,26 +22,11 @@ import { Collapsible } from '@/components/Collapsible';
 
 
 export default function TabTwoScreen(props) {
-  console.log(props);
+
   const [lang, setLang] = React.useState(2);
 
     const [settings, setSettings] = React.useState(undefined);
 
-
-  // if (Platform.OS === 'ios') {
-    var user =  AsyncStorage.getItem('publicData')._j;
-  // }else {
-  //   var user = localStorage.getItem("publicData");
-  // }
-
-  // if (Platform.OS === 'ios') {
-    var invoice =  AsyncStorage.getItem("invoiceId")._j;
-  // }else {
-  //   var invoice = localStorage.getItem("invoiceId");
-  // }
-
-  console.log('asdasd');
-  console.log(invoice);
 
 
 
@@ -70,11 +55,29 @@ export default function TabTwoScreen(props) {
   }
 
 
+
+
+    const [user, setUser] = React.useState(undefined);
+    const [invoice, setInvoice] = React.useState(undefined);
+    useEffect(() => {
+      if (user == undefined) {
+        AsyncStorage.multiGet(['publicData', 'invoiceId']).then((data) => {
+          console.log('data',JSON.parse(data[0][1]));
+
+          if (JSON.parse(data[0][1])) {
+            setUser(JSON.parse(data[0][1]))
+          }
+          if (JSON.parse(data[1][1])) {
+            setInvoice(JSON.parse(data[1][1]))
+          }
+        });
+      }
+    });
+
   useFocusEffect(
     React.useCallback(() => {
-      //      // public_id: JSON.parse(user).id
-      if (order == undefined) {
-        axios.post(path + '/api/render', { for: 'cart',  })
+      if (order == undefined && user) {
+        axios.post(path + '/api/render', { for: 'cart',invoice:invoice,id:user ? user.id : undefined,  })
           .then(res => {
             if (res.data.orders.filter(e=>e.status==0).length) {
               setOrder(res.data.orders.filter(e=>e.status==0)[res.data.orders.filter(e=>e.status==0).length - 1])
@@ -87,13 +90,8 @@ export default function TabTwoScreen(props) {
 
 
           });
-        return () => {
-          // Do something when the screen is unfocused
-          // Useful for cleanup functions
-        };
       }
-    }, [order])
-
+    }, [order,user])
   );
 
 
@@ -128,9 +126,9 @@ export default function TabTwoScreen(props) {
             </View>
           </View>
 
-          <TouchableOpacity onPress={()=> { setLang(lang ? 0: 1) }} style={{alignItems:'center',flexDirection:lang ? 'row':'row-reverse',boxShadow:'1px 1px 6px #00000030',borderRadius:20,width:'94%',padding:10,paddingLeft:20,paddingRight:20,marginVertical: 10,marginHorizontal: 10,color:'#000',backgroundColor: '#ccc5'}}  >
+          {false && <TouchableOpacity onPress={()=> { setLang(lang ? 0: 1) }} style={{alignItems:'center',flexDirection:lang ? 'row':'row-reverse',boxShadow:'1px 1px 6px #00000030',borderRadius:20,width:'94%',padding:10,paddingLeft:20,paddingRight:20,marginVertical: 10,marginHorizontal: 10,color:'#000',backgroundColor: '#ccc5'}}  >
             <Text style={{marginLeft:20,marginRight:20,textAlign:!lang ? 'left':'right',fontWeight:600,color:'#000',}}>{render('content','lang')}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity>}
           <View style={{ alignContent: 'space-between', display: 'grid', padding: 20 }}>
             <ScrollView style={{height:'100%',}} >
 
