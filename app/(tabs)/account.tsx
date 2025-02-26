@@ -36,8 +36,8 @@ export default function Account() {
 
   const [note, onChangeNote] = React.useState('');
   const [pName, onChangePname] = React.useState('');
-  const [path, setPath] = React.useState('http://127.0.0.1:8000');
-  // const [path, setPath] = React.useState('https://www.almuheetco.com');
+  // const [path, setPath] = React.useState('http://127.0.0.1:8000');
+  const [path, setPath] = React.useState('https://www.almuheetco.com');
 
   useEffect(() => {
     if (user == undefined) {
