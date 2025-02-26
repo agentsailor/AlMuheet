@@ -75,7 +75,7 @@ export default function TabOneScreen() {
         .then(res => {
           setCategories(res.data.categories)
           setSettings(res.data.settings)
-          setLang(res.data.lang == 'en' ? 0:1)
+          setLang(res.data.lang == "en" ? 0:1)
         });
     }, [])
 
@@ -229,7 +229,7 @@ export default function TabOneScreen() {
             </Link>
           </TouchableOpacity>
 
-        <TouchableOpacity onPress={()=> { setLang(lang ? 0: 1) }} style={{alignItems:'center',flexDirection:lang ? 'row':'row-reverse',boxShadow:'1px 1px 6px #00000030',borderRadius:20,width:'94%',padding:10,paddingLeft:20,paddingRight:20,marginVertical: 10,marginHorizontal: 10,color:'#000',backgroundColor: '#ccc5'}}  >
+        <TouchableOpacity onPress={()=> { axios.post(path+'/api/render',{for:'lang',value:!lang ? 'ar':'en'}).then(res=>{setLang(lang ? 0: 1)}) }} style={{alignItems:'center',flexDirection:lang ? 'row':'row-reverse',boxShadow:'1px 1px 6px #00000030',borderRadius:20,width:'94%',padding:10,paddingLeft:20,paddingRight:20,marginVertical: 10,marginHorizontal: 10,color:'#000',backgroundColor: '#ccc5'}}  >
           <IconSymbol style={{}} size={25} name="language" color={colorScheme === 'dark' ? '#fff':"#000"} />
           <Text style={{marginLeft:20,marginRight:20,textAlign:!lang ? 'left':'right',fontWeight:600,color:'#000',}}>{render('content','lang')}</Text>
         </TouchableOpacity>
