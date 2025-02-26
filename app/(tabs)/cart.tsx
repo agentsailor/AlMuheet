@@ -30,8 +30,8 @@ export default function TabTwoScreen(props) {
 
 
 
-  const [path, setPath] = React.useState('http://127.0.0.1:8000');
-  // const [path, setPath] = React.useState('https://www.almuheetco.com');
+  // const [path, setPath] = React.useState('http://127.0.0.1:8000');
+  const [path, setPath] = React.useState('https://www.almuheetco.com');
 
   const [name, onChangeName] = React.useState('');
   const [number, onChangeNumber] = React.useState('');
