@@ -30,8 +30,8 @@ export default function TabTwoScreen(props) {
 
 
 
-  // const [path, setPath] = React.useState('http://127.0.0.1:8000');
-  const [path, setPath] = React.useState('https://www.almuheetco.com');
+  const [path, setPath] = React.useState('http://127.0.0.1:8000');
+  // const [path, setPath] = React.useState('https://www.almuheetco.com');
 
   const [name, onChangeName] = React.useState('');
   const [number, onChangeNumber] = React.useState('');
@@ -59,39 +59,40 @@ export default function TabTwoScreen(props) {
 
     const [user, setUser] = React.useState(undefined);
     const [invoice, setInvoice] = React.useState(undefined);
-    useEffect(() => {
-      if (user == undefined) {
-        AsyncStorage.multiGet(['publicData', 'invoiceId']).then((data) => {
-          console.log('data',JSON.parse(data[0][1]));
 
-          if (JSON.parse(data[0][1])) {
-            setUser(JSON.parse(data[0][1]))
-          }
-          if (JSON.parse(data[1][1])) {
-            setInvoice(JSON.parse(data[1][1]))
-          }
-        });
-      }
-    });
+
+    useFocusEffect(
+      React.useCallback(() => {
+        if (user == undefined) {
+          AsyncStorage.multiGet(['publicData', 'invoiceId']).then((data) => {
+            console.log('data',JSON.parse(data[0][1]));
+
+            if (JSON.parse(data[0][1])) {
+              setUser(JSON.parse(data[0][1]))
+            }
+            if (JSON.parse(data[1][1])) {
+              setInvoice(JSON.parse(data[1][1]))
+            }
+          });
+        }
+      }, [user])
+    );
+
+
 
   useFocusEffect(
     React.useCallback(() => {
-      if (order == undefined && user) {
         axios.post(path + '/api/render', { for: 'cart',invoice:invoice,id:user ? user.id : undefined,  })
           .then(res => {
-            if (res.data.orders.filter(e=>e.status==0).length) {
-              setOrder(res.data.orders.filter(e=>e.status==0)[res.data.orders.filter(e=>e.status==0).length - 1])
+            if (res.data.orders.length) {
+              setOrder(res.data.orders[res.data.orders.length - 1])
             }
-            setCart(res.data.orders)
-
-
-              setSettings(res.data.settings)
-              setLang(res.data.lang == 'en' ? 0:1)
-
-
+            setCart(res.data.cart)
+            setSettings(res.data.settings)
+            setLoading(false)
+            setLang(res.data.lang == 'en' ? 0:1)
           });
-      }
-    }, [order,user])
+    }, [loading,user])
   );
 
 
@@ -112,14 +113,14 @@ export default function TabTwoScreen(props) {
               <Text type="title" style={{ padding:4,flex:1,fontSize: 20 }}>{render('content','status')}</Text>
               <Text style={{padding:4,flex:1,fontWeight:600, backgroundColor:order && order.status == 0 ? '#fcbe0e': [2,4].includes(order.status) ? 'red' : '#ccc' , } }>{order && order.status == 1 ? render('content','accepted') : render('content','pendingApprove')}</Text>
             </View>
-            <View style={{display:'flex',flexDirection:'row',}}>
+            {order.delivery == 2 && <View style={{display:'flex',flexDirection:'row',}}>
               <Text type="title" style={{ padding:4,flex:1,fontSize: 20 }}>{render('content','transport')}</Text>
-              <Text type="title" style={{ flex:1,fontSize: 20 }}>{order && order.trans ? order.trans : '-- --'}</Text>
-            </View>
-            <View style={{display:'flex',flexDirection:'row',}}>
+              <Text type="title" style={{ flex:1,fontSize: 20 }}>{order && order.delivery_cash ? order.delivery_cash : '-- --'}</Text>
+            </View>}
+            {order.tax && <View style={{display:'flex',flexDirection:'row',}}>
               <Text type="title" style={{ padding:4,flex:1,fontSize: 20 }}>{render('content','tax')}</Text>
               <Text type="title" style={{ flex:1,fontSize: 20 }}>{order && order.tax ? order.tax : '-- --'}</Text>
-            </View>
+            </View>}
             <View style={{display:'flex',flexDirection:'row',}}>
               <Text type="title" style={{ padding:4,flex:1,fontSize: 30 }}>{render('content','total')}</Text>
               <Text type="title" style={{ flex:1,fontSize: 30 }}>{order && order.total ? order.total : '-- --'}</Text>
@@ -151,29 +152,25 @@ export default function TabTwoScreen(props) {
 
 
             <View style={{paddingBottom:280}} >
-              {cart && cart.filter(e=>e.status==0).map((row,key) =>
-                <View key={key}>
-                  {row.items_details.map((x,k) =>
-                    <View style={{borderRadius:20,backgroundColor:'#fff',marginBottom:10,flexDirection:'row'}} key={k}>
-                      <View style={{ flex:1,padding: 10, }}>
-                        <Text type="title">{lang ? x.product.name : x.product.name_en}</Text>
-                        <Text style={{}} > {x.price+ ' x ' + x.quantity + ' = ' + x.price * x.quantity} </Text>
-                      </View>
-                      <View style={{borderRadius:20,overflow:'hidden',flexDirection:'row',}}>
-                        <TouchableOpacity size="small" style={{ color: '#000', backgroundColor: '#fcbe0e',padding:10 }} fullWidth variant='contained' onPress={() => axios.post(path+'/api/render',{for:'order',trigger:'updateItem',id:x.id,value:x.quantity-1,col:'quantity'}).then(res=>  {setLoading(true),setOrder(undefined)} ) } >
-                          <Text><IconSymbol size={20} name="minus" color="#000" /></Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity size="small" disabled fullWidth variant='contained' onClick={() => { }} >
-                          <Text style={{padding:10}}>{x.quantity}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity size="small" style={{ color: '#000', backgroundColor: '#fcbe0e',padding:10 }} fullWidth variant='contained' onPress={() => axios.post(path+'/api/render',{for:'order',trigger:'updateItem',id:x.id,value:x.quantity+1,col:'quantity'}).then(res=>  {setLoading(true),setOrder(undefined)} ) } >
-                          <Text><IconSymbol size={20} name="plus" color="#000" /></Text>
-                        </TouchableOpacity>
-                      </View>
+                {order && order.items_details && order.items_details.map((x,k) =>
+                  <View style={{borderRadius:20,backgroundColor:'#fff',marginBottom:10,flexDirection:'row'}} key={k}>
+                    <View style={{ flex:1,padding: 10, }}>
+                      <Text type="title">{lang ? x.product.name : x.product.name_en}</Text>
+                      <Text style={{}} > {x.price+ ' x ' + x.quantity + ' = ' + x.price * x.quantity} </Text>
                     </View>
-                  )}
-                </View>
-              )}
+                    <View style={{borderRadius:20,overflow:'hidden',flexDirection:'row',}}>
+                      <TouchableOpacity size="small" style={{ color: '#000', backgroundColor: '#fcbe0e',padding:10 }} fullWidth variant='contained' onPress={() => axios.post(path+'/api/render',{for:'order',trigger:'updateItem',id:x.id,value:x.quantity-1,col:'quantity'}).then(res=>  {setLoading(true)} ) } >
+                        <Text><IconSymbol size={20} name="minus" color="#000" /></Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity size="small" disabled fullWidth variant='contained' onClick={() => { }} >
+                        <Text style={{padding:10}}>{x.quantity}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity size="small" style={{ color: '#000', backgroundColor: '#fcbe0e',padding:10 }} fullWidth variant='contained' onPress={() => axios.post(path+'/api/render',{for:'order',trigger:'updateItem',id:x.id,value:x.quantity+1,col:'quantity'}).then(res=>  {setLoading(true)} ) } >
+                        <Text><IconSymbol size={20} name="plus" color="#000" /></Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
             </View>
             </ScrollView >
           </View>
@@ -182,7 +179,7 @@ export default function TabTwoScreen(props) {
             <TouchableOpacity onPress={() => { }} style={{ fontWeight: 600,  backgroundColor: '#17233c',padding:20 }} variant='contained'>
               <Text style={{fontSize:15,color: '#fff',fontWeight:600}}> {render('content','cancel')} </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setComplete(!complete) }} disabled={false && Boolean(order.status == 0)} style={{justifyContent:'center',alignItems:'center',flex:1, minHeight:60, fontWeight:600, backgroundColor: '#fcbe0e'  }} fullWidth variant='contained'>
+            <TouchableOpacity onPress={() => { setComplete(!complete) }} disabled={ Boolean(order.status == 0)} style={{justifyContent:'center',alignItems:'center',flex:1, minHeight:60, fontWeight:600, backgroundColor: Boolean(order.status == 0) ? '#ccc':'#fcbe0e'  }} fullWidth variant='contained'>
             <Text style={{fontSize:15,color: '#000',fontWeight:600}}>
               {render('content','proceed')}
             </Text>
@@ -218,20 +215,28 @@ export default function TabTwoScreen(props) {
             </View>
             <View style={{margin:20,borderWidth:1,border:'1px solid #17233c',borderRadius:20,overflow:'hidden',}}>
               <Text style={{textAlign:'center',color:'#fff',padding:5,backgroundColor:'#17233c'}} type="subtitle">{render('content','total')}</Text>
-              <TextInput value={order && order.total} name="number" onChangeText={onChangeNumber} type="phone-pad" style={{borderRadius:20,overflow:'hidden',backgroundColor:'#fff', height: 40, color:'#000', textAlign:lang ? 'right':'left', width:'100%', padding: 10,}} />
+              <TextInput value={order && parseInt(order.total) + (order.delivery ? parseInt(order.delivery_cash) : 0)} name="number" onChangeText={onChangeNumber} type="phone-pad" style={{borderRadius:20,overflow:'hidden',backgroundColor:'#fff', height: 40, color:'#000', textAlign:lang ? 'right':'left', width:'100%', padding: 10,}} />
             </View>
 
 
           <View style={{margin:20,borderRadius:20,overflow:'hidden'}}>
             <TouchableOpacity style={{flexDirection:'row',justifyContent:'center',alignItems:'center', minHeight:60, backgroundColor: '#fcbe0e' }}
-            onPress={()=> (setComplete(false),setOrder(false),AsyncStorage.removeItem("invoiceId") ) }>
+            onPress={()=> axios.post(path+'/api/render',{
+              for:'order',
+              trigger:'cash',
+              cashType:cashType,
+              order_id:order.id,
+              total:order && parseInt(order.total) + (order.delivery ? parseInt(order.delivery_cash) : 0)
+            }).then(res=> {
+              setComplete(false),setOrder(false),setLoading(true),setInvoice(undefined),AsyncStorage.removeItem("invoiceId")
+            }) }>
               <Text style={{fontWeight:600,}}> {render('content','pay')} </Text>
              </TouchableOpacity>
           </View>
           </Modal>
 
         </View>
-        : !loading && cart && cart.length ?
+        : !loading && cart  ?
         <View>
           <View style={{width:'100%',height:300,backgroundColor:'#17233c',alignItems: 'center',justifyContent: 'center'}}>
             <IconSymbol size={160} color="#fcbe0e" name="shopping-cart" style={styles.headerImage}/>
