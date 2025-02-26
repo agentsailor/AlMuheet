@@ -51,8 +51,8 @@ export default function TabOneScreen() {
     const [splitPage, setSplit] = React.useState(6);
     const [page, setPage] = React.useState(0);
 
-    const [path, setPath] = React.useState('http://127.0.0.1:8000');
-    // const [path, setPath] = React.useState('https://www.almuheetco.com');
+    // const [path, setPath] = React.useState('http://127.0.0.1:8000');
+    const [path, setPath] = React.useState('https://www.almuheetco.com');
 
     const [cart, setCart] = React.useState([]);
     const [cartProceed, setCartProceed] = React.useState(false);
