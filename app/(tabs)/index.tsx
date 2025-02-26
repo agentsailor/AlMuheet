@@ -48,8 +48,8 @@ export default function TabOneScreen() {
 
 
     const [products, setProducts] = React.useState(undefined);
-    const [splitPage, setSplit] = React.useState(6);
-    const [page, setPage] = React.useState(0);
+    const [splitPage, setSplit] = React.useState(8);
+    const [page, setPage] = React.useState(1);
 
     // const [path, setPath] = React.useState('http://127.0.0.1:8000');
     const [path, setPath] = React.useState('https://www.almuheetco.com');
@@ -280,6 +280,15 @@ export default function TabOneScreen() {
           )}
         </View>
       </ScrollView>
+
+      {products &&
+      <View style={{display: 'inline-block',alignSelf:'center'}}>
+        {products.links.map((c,k)=>
+          <TouchableOpacity disabled={k==0 && page == 1} onPress={k == 0 ? ()=> setPage(page-1) : k == products.links.length -1 ? ()=> setPage(page+1) : ()=> setPage(parseInt(c.label))} style={{background:c.active ? '#fcbe0e':'#fff', color: 'black',float: 'left',padding:10,textDecoration: 'none'}}>  {k==0 ? 'Previews' :k == products.links.length -1 ? 'Next':c.label}</TouchableOpacity>
+        )}
+      </View>
+      }
+
 
         <Modal animationType="slide" presentationStyle="pageSheet" transparent={false} visible={Boolean(modalVisible)} onRequestClose={() => {  setPreview(undefined); }}>
             {modalVisible && products && products.data.filter(e=>e.id == modalVisible.id).map((row,key)=> <View key={key} style={{height:'100%'}}>
