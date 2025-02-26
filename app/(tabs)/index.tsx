@@ -284,7 +284,7 @@ export default function TabOneScreen() {
       {products &&
       <View style={{display: 'inline-block',alignSelf:'center'}}>
         {products.links.map((c,k)=>
-          <TouchableOpacity disabled={k==0 && page == 1} onPress={k == 0 ? ()=> setPage(page-1) : k == products.links.length -1 ? ()=> setPage(page+1) : ()=> setPage(parseInt(c.label))} style={{background:c.active ? '#fcbe0e':'#fff', color: 'black',float: 'left',padding:10,textDecoration: 'none'}}>  {k==0 ? 'Previews' :k == products.links.length -1 ? 'Next':c.label}</TouchableOpacity>
+          <TouchableOpacity disabled={(k == products.links.length -1 && products.last_page == page || k == 0 && page == 1)} onPress={k == 0 ? ()=> setPage(page-1) : k == products.links.length -1 ? ()=> setPage(page+1) : ()=> setPage(parseInt(c.label))} style={{opacity:(k == products.links.length -1 && products.last_page == page || k == 0 && page == 1) ? 0.5:1,background:c.active ? '#fcbe0e':'#fff', color: 'black',float: 'left',padding:10,textDecoration: 'none'}}>  {k==0 ? 'Previews' :k == products.links.length -1 ? 'Next':c.label}</TouchableOpacity>
         )}
       </View>
       }
