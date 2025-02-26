@@ -3,6 +3,7 @@ import React , {useEffect} from 'react';
 import { Platform, Switch,Pressable, ScrollView,SafeAreaView,StyleSheet,View,Modal,Image,Button, TouchableOpacity, TouchableHighlight, TextInput } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text } from '@/components/Themed';
@@ -50,8 +51,8 @@ export default function TabOneScreen() {
     const [splitPage, setSplit] = React.useState(6);
     const [page, setPage] = React.useState(0);
 
-    // const [path, setPath] = React.useState('http://127.0.0.1:8000');
-    const [path, setPath] = React.useState('https://www.almuheetco.com');
+    const [path, setPath] = React.useState('http://127.0.0.1:8000');
+    // const [path, setPath] = React.useState('https://www.almuheetco.com');
 
     const [cart, setCart] = React.useState([]);
     const [cartProceed, setCartProceed] = React.useState(false);
@@ -121,18 +122,24 @@ export default function TabOneScreen() {
 
     const [user, setUser] = React.useState(undefined);
 
-    useEffect(() => {
-      if (user == undefined) {
-        AsyncStorage.multiGet(['publicData', 'invoiceId']).then((data) => {
-          if (JSON.parse(data[0][1])) {
-            setInvoice(JSON.parse(data[1][1]))
-            setUser(JSON.parse(data[0][1]))
-          }else {
-            setUser(null)
-          }
-        });
-      }
-    });
+
+
+
+
+    useFocusEffect(
+      React.useCallback(() => {
+        if (user == undefined) {
+          AsyncStorage.multiGet(['publicData', 'invoiceId']).then((data) => {
+            if (JSON.parse(data[0][1])) {
+              setInvoice(JSON.parse(data[1][1]))
+              setUser(JSON.parse(data[0][1]))
+            }else {
+              setUser(null)
+            }
+          });
+        }
+      }, [user])
+    );
 
 
 
@@ -338,6 +345,26 @@ export default function TabOneScreen() {
               } )} >
                 <Text style={{fontWeight:600,color:'#000'}}>{render('content','addToInvoice')}</Text>
               </TouchableOpacity>
+            :Boolean(user) ?
+              <TouchableOpacity style={{backgroundColor:'#fcbe0e',fontWeight:600,color:'#000',flex: 1,padding:20,alignItems:'center'}} onPress={()=> {
+              axios.post(path+'/api/render',{
+                product_id:cart.map((x)=> x.id ),
+                quantity:cart.map((x)=> x.quantity ),
+                for:'order',trigger:'new' ,
+                phone:user.phone,
+              })
+              .then(async(res)=> {
+                const data = JSON.stringify(res.data.public);
+                const invoiceId = JSON.stringify(res.data.id);
+
+                await AsyncStorage.multiSet([['invoiceId', invoiceId], ['publicData', data]])
+                setInvoice(invoiceId)
+                setUser(data)
+                setCart([])
+              })
+              }} >
+                <Text style={{fontWeight:600,color:'#000'}}>{render('content','newOrder')}</Text>
+              </TouchableOpacity>
             :
               <TouchableOpacity style={{backgroundColor:'#fcbe0e',fontWeight:600,color:'#000',flex: 1,padding:20,alignItems:'center'}} onPress={()=> setCartProceed(!cartProceed)} >
                 <Text style={{fontWeight:600,color:'#000'}}>{render('content','completeData')}</Text>
@@ -364,7 +391,7 @@ export default function TabOneScreen() {
             <Text style={{textAlign:'center',color:'#fff',padding:10,backgroundColor:'#17233c',fontWeight:600}} type="subtitle">{render('content','personal')}</Text>
             <TextInput require value={name} name="name" onChangeText={onChangeName} type="text" style={{ height: 40, color:'#fff', textAlign:lang ? 'right':'left', width:'100%', borderBottomWidth:1, padding: 10,color:'#000'}} placeholder={render('content','fname')} />
             <TextInput value={mail} name="number" onChangeText={onChangeMail} type="phone-pad" style={{ height: 40, color:'#fff', textAlign:lang ? 'right':'left', width:'100%', borderBottomWidth:1, padding: 10,color:'#000',}} placeholder={render('content','email')}/>
-            <TextInput require value={number} name="number" onChangeText={onChangeNumber} type="phone-pad" style={{ height: 40, color:'#fff', textAlign:lang ? 'right':'left', width:'100%', borderBottomWidth:1, padding: 10,color:'#000',borderBottomWidth:0}} placeholder={render('content','phone')} keyboardType="numeric"/>
+            <TextInput require value={number} name="phone" onChangeText={onChangeNumber} type="phone-pad" style={{ height: 40, color:'#fff', textAlign:lang ? 'right':'left', width:'100%', borderBottomWidth:1, padding: 10,color:'#000',borderBottomWidth:0}} placeholder={render('content','phone')} keyboardType="numeric"/>
           </View>
           <View style={{margin:20,borderWidth:1,border:'1px solid #17233c',borderRadius:20,overflow:'hidden',}}>
             <Text style={{textAlign:'center',color:'#fff',padding:10,backgroundColor:'#17233c',fontWeight:600}} type="subtitle">{render('content','storeData')}</Text>
